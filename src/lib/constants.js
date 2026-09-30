@@ -21,8 +21,8 @@ export const APP_CONFIG = {
     kota: 'Palembang',
     provinsi: 'Sumatera Selatan',
     negara: 'Indonesia',
-    // Koordinat approx Kecamatan Sako, Palembang
-    coordinates: { lat: -2.9767, lng: 104.7414 },
+    // Koordinat Kecamatan Sako, Palembang (centroid, sumber: Kemendagri/BMKG)
+    coordinates: { lat: -2.92919536, lng: 104.78056115 },
     timezone: 'Asia/Jakarta'
   },
 

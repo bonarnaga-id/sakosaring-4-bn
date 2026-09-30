@@ -59,7 +59,7 @@ export default function Header({ isLive = false, lastUpdated = null }) {
                 ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
                 : 'bg-slate-100 text-slate-600'
             }`}
-            title={isLive ? 'Data tersambung ke database' : 'Mode demo'}
+            title={isLive ? 'Data real-time dari CAMS (Open-Meteo) & BMKG' : 'Mode demo'}
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${

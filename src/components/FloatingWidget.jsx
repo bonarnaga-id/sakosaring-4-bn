@@ -3,7 +3,6 @@ import { DONATION_PRESETS, DONATION_LABELS, APP_CONFIG } from '../lib/constants.
 import { formatRupiah } from '../lib/format.js'
 import { sanitizeInput, sanitizeMessage, sanitizeLive } from '../lib/security.js'
 import { donationLimiter } from '../lib/rateLimiter.js'
-import { saveDonation } from '../lib/neonClient.js'
 import QRCode from 'qrcode'
 
 /**
@@ -147,12 +146,21 @@ export default function FloatingWidget() {
       setStatus({ type: 'idle', message: '' })
 
       try {
-        // 3. Simpan ke Neon (atau demo)
-        await saveDonation({
-          nama: cleanName,
-          jumlah: amount,
-          pesan: sanitizeMessage(donorMessage, 160)
+        // 3. Simpan via API server (connection string Neon tidak diekspos ke browser)
+        const res = await fetch('/api/donasi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nama: cleanName,
+            jumlah: amount,
+            pesan: sanitizeMessage(donorMessage, 160)
+          })
         })
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}))
+          throw new Error(errBody?.error || `HTTP ${res.status}`)
+        }
 
         setStatus({
           type: 'success',

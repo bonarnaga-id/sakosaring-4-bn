@@ -5,7 +5,7 @@ import DownloadSection from './components/DownloadSection.jsx'
 import Documentation from './components/Documentation.jsx'
 import Footer from './components/Footer.jsx'
 import FloatingWidget from './components/FloatingWidget.jsx'
-import { fetchAirQuality, IS_DEMO_MODE } from './lib/neonClient.js'
+import { fetchAirQuality } from './lib/apiClient.js'
 import { refreshLimiter } from './lib/rateLimiter.js'
 import { APP_CONFIG } from './lib/constants.js'
 
@@ -13,7 +13,8 @@ import { APP_CONFIG } from './lib/constants.js'
  * App.jsx — Root SakoSaring.
  *
  * Tanggung jawab:
- *  - Mengambil data kualitas udara dari Neon (via lib/neonClient.js)
+ *  - Mengambil data kualitas udara dari API serverless /api/udara
+ *    (sumber real: CAMS via Open-Meteo + BMKG)
  *  - Auto-refresh berkala
  *  - State global: daftar stasiun & stasiun aktif
  *  - Menyusun layout: Header → Dashboard → Download → Dokumentasi → Footer
@@ -25,12 +26,13 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
-  const [isLive, setIsLive] = useState(!IS_DEMO_MODE)
+  const [meta, setMeta] = useState(null)
+  const [isLive, setIsLive] = useState(true)
 
   const intervalRef = useRef(null)
 
   // -----------------------------------------------------
-  // Mengambil data dari Neon
+  // Mengambil data dari API serverless
   // -----------------------------------------------------
   const loadData = useCallback(async (isManual = false) => {
     // Rate-limiting mock untuk refresh manual
@@ -45,16 +47,20 @@ export default function App() {
     try {
       setError(null)
       const data = await fetchAirQuality()
-      if (data?.length) {
-        setStations(data)
+      if (data?.stations?.length) {
+        setStations(data.stations)
+        setMeta(data.meta ?? null)
         setLastUpdated(new Date().toISOString())
         // Pertahankan pilihan user, atau pilih stasiun pertama
-        setActiveStationId((prev) => prev ?? data[0].id)
+        setActiveStationId((prev) => prev ?? data.stations[0].id)
+      } else {
+        throw new Error('Respons API tidak berisi data stasiun')
       }
     } catch (err) {
       console.error('[SakoSaring] Gagal memuat data:', err)
       setError(
-        'Gagal memuat data kualitas udara. Periksa koneksi database Neon Anda.'
+        'Gagal memuat data kualitas udara. Layanan CAMS (Open-Meteo) atau ' +
+          'BMKG sedang tidak dapat dijangkau. Coba lagi beberapa saat.'
       )
     } finally {
       setLoading(false)
@@ -110,19 +116,21 @@ export default function App() {
         </div>
       )}
 
-      {IS_DEMO_MODE && !error && (
+      {meta?.catatan && !error && (
         <div className="container-app mt-4">
-          <div className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800">
+          <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
             <span className="text-base" aria-hidden="true">
-              💡
+              ℹ️
             </span>
             <div>
-              <p className="font-bold">Mode Demo</p>
-              <p className="mt-0.5 text-xs">
-                Koneksi Neon belum dikonfigurasi. Menampilkan data contoh.
-                Set <code className="font-mono">VITE_NEON_CONNECTION_STRING</code> di{' '}
-                <code className="font-mono">.env</code> untuk data nyata.
-              </p>
+              <p className="font-bold">Sumber & keterbatasan data</p>
+              <p className="mt-0.5 text-xs leading-relaxed">{meta.catatan}</p>
+              {meta.sumber && (
+                <p className="mt-1.5 text-xs">
+                  Polutan: <strong>{meta.sumber.polutan}</strong> • Cuaca:{' '}
+                  <strong>{meta.sumber.cuaca}</strong>
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -136,6 +144,7 @@ export default function App() {
         loading={loading}
         lastUpdated={lastUpdated}
         onRefresh={handleRefresh}
+        meta={meta}
       />
 
       {/* === Download source code === */}

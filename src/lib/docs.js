@@ -10,7 +10,7 @@ export const DOC_SECTIONS = [
     icon: 'ℹ️',
     body: [
       'SakoSaring adalah sistem pemantauan & analisis kualitas udara untuk Kecamatan Sako, Kota Palembang, Sumatera Selatan. Aplikasi ini menampilkan Indeks Standar Pencemar Udara (ISPU) untuk PM2.5, PM10, CO, dan SO₂ secara real-time, lengkap dengan indeks kenyamanan & rekomendasi kesehatan.',
-      'Dibangun dengan React + Vite + Tailwind CSS, dan tersambung ke database Neon PostgreSQL. Sumber daya gratis, bebas iklan, dan open source.'
+      'Data polutan diambil dari CAMS (Copernicus) via Open-Meteo, dan data cuaca per-kelurahan dari BMKG. Dibangun dengan React + Vite + Tailwind CSS, di atas Vercel Serverless Functions. Sumber daya gratis, bebas iklan, dan open source.'
     ]
   },
   {
@@ -28,7 +28,7 @@ export const DOC_SECTIONS = [
     title: 'Cara Pakai',
     icon: '🚀',
     steps: [
-      'Buka dashboard — pilih stasiun pemantauan di Kecamatan Sako.',
+      'Buka dashboard — pilih kelurahan di Kecamatan Sako (Sako, Sako Baru, Sialang, Sukamaju).',
       'Lihat kartu ISPU: warna hijau = aman, kuning = waspada, merah = bahaya.',
       'Baca "Rekomendasi Kesehatan" untuk panduan aktivitas harian.',
       'Klik tombol hijau mengambang di kanan bawah untuk dukung via Trakteer.'
@@ -45,15 +45,12 @@ cd sakosaring
 # 2. Install dependency
 npm install
 
-# 3. Siapkan database Neon
+# 3. (Opsional) Siapkan database Neon untuk donasi
 #    - Buat project di https://neon.tech
 #    - Jalankan schema.sql di SQL Editor Neon
+#    - Set env var DATABASE_URL di Vercel (server-side)
 
-# 4. Konfigurasi environment
-cp .env.example .env
-#    isi VITE_NEON_CONNECTION_STRING=postgresql://...
-
-# 5. Jalankan
+# 4. Jalankan
 npm run dev      # development → http://localhost:5173
 npm run build    # produksi → folder dist/
 npm run preview  # preview hasil build`
@@ -76,12 +73,14 @@ npm run preview  # preview hasil build`
     icon: '📁',
     files: [
       ['src/App.jsx', 'Root: layout, state global, auto-refresh'],
-      ['src/components/Dashboard.jsx', 'Dashboard ISPU + pemilihan stasiun'],
+      ['src/components/Dashboard.jsx', 'Dashboard ISPU + pemilihan kelurahan'],
       ['src/components/FloatingWidget.jsx', 'Tombol & modal donasi Trakteer'],
-      ['src/lib/neonClient.js', 'Connector Neon PostgreSQL'],
+      ['src/lib/apiClient.js', 'Client API /api/udara (sumber data real)'],
       ['src/lib/ispu.js', 'Perhitungan ISPU & rekomendasi kesehatan'],
       ['src/lib/security.js', 'Sanitasi input & XSS prevention'],
-      ['schema.sql', 'Skema database: stasiun_sako & riwayat_trakteer']
+      ['api/udara.js', 'Serverless: polutan CAMS + cuaca BMKG'],
+      ['api/donasi.js', 'Serverless: simpan donasi ke Neon'],
+      ['schema.sql', 'Skema database: riwayat_trakteer']
     ]
   },
   {
@@ -91,7 +90,11 @@ npm run preview  # preview hasil build`
     faqs: [
       [
         'Dari mana data kualitas udara berasal?',
-        'Dari sensor/stasiun pemantauan di Kecamatan Sako yang tersimpan di database Neon PostgreSQL. Jika belum dikonfigurasi, aplikasi memakai data demo.'
+        'Dari dua sumber resmi: (1) Polutan (PM2.5, PM10, CO, SO₂) dari CAMS (Copernicus Atmosphere Monitoring Service) melalui Open-Meteo; (2) Suhu, kelembapan, dan kondisi cuaca per-kelurahan dari BMKG. Tidak ada stasiun ISPU fisik di Sako, sehingga nilai polutan merupakan data model atmosfer (grid ~45 km), bukan pengukuran langsung.'
+      ],
+      [
+        'Mengapa nilai polutan sama untuk semua kelurahan?',
+        'Karena seluruh kelurahan di Kecamatan Sako berada dalam satu sel grid CAMS (resolusi ~45 km). Kami tidak memalsukan nilai berbeda per kelurahan. Yang membedakan antar kelurahan adalah data cuaca dari BMKG, yang memang bersifat per-kelurahan.'
       ],
       [
         'Apakah aplikasi ini gratis?',

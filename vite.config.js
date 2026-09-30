@@ -23,7 +23,7 @@ export default defineConfig({
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob:",
-        "connect-src 'self' https://*.neon.tech https://neon.tech",
+        "connect-src 'self' https://air-quality-api.open-meteo.com https://api.open-meteo.com https://api.bmkg.go.id",
         "frame-ancestors 'self'",
         "base-uri 'self'",
         "form-action 'self'"

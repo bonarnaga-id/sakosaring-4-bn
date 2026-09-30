@@ -10,9 +10,10 @@ import { calculateISPU } from '../lib/ispu.js'
  * Dashboard.jsx — Bagian utama: pemantauan ISPU real-time Sako.
  *
  * Props:
- *  - stations: array data stasiun dari neonClient.fetchAirQuality()
+ *  - stations: array data kelurahan dari /api/udara
  *  - activeStationId, onSelectStation
  *  - loading, lastUpdated, onRefresh
+ *  - meta: metadata sumber data dari API
  */
 export default function Dashboard({
   stations = [],
@@ -20,7 +21,8 @@ export default function Dashboard({
   onSelectStation,
   loading = false,
   lastUpdated = null,
-  onRefresh
+  onRefresh,
+  meta = null
 }) {
   // Stasiun aktif (fallback ke stasiun pertama)
   const station = useMemo(
@@ -52,6 +54,23 @@ export default function Dashboard({
         onSelect={onSelectStation}
         lastUpdated={lastUpdated}
       />
+
+      {/* Label sumber data */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+        <span className="inline-flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+          Polutan: {station?.sumberPolutan ?? 'CAMS via Open-Meteo'}
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-sky-500" aria-hidden="true" />
+          Cuaca: {station?.sumberCuaca ?? 'BMKG'}
+        </span>
+        {station?.cuaca && (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+            {station.cuaca}
+          </span>
+        )}
+      </div>
 
       {/* Hero ISPU */}
       <div className="mt-5">

@@ -111,8 +111,8 @@ export default function Hero({ station, ispu, loading = false, onRefresh }) {
           <Meta label="Suhu" value={`${formatNumber(station.temperature, 1)}°C`} />
           <Meta label="Kelembapan" value={`${formatNumber(station.humidity, 0)}%`} />
           <Meta
-            label="Status Sensor"
-            value={station.status || 'Aktif'}
+            label="Status Udara"
+            value={station.status || cat.label}
           />
           <Meta
             label="Terakhir Dibaca"

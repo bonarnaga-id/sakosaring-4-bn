@@ -61,7 +61,7 @@ export default function StationSelector({
                   isActive ? 'text-brand-100' : 'text-slate-500'
                 }`}
               >
-                {s.lokasi?.split(',')[0] || 'Sako, Palembang'}
+                {s.kelurahan ? `Kelurahan ${s.kelurahan}` : (s.lokasi?.split(',')[0] || 'Sako, Palembang')}
               </span>
             </button>
           )
